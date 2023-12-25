@@ -3,11 +3,12 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".Application"
         android:label="YAYAMF"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.DayNight"
         tools:ignore="MissingApplicationIcon">
- <meta-data
+        <meta-data
             android:name="xposedmodule"
             android:value="true" />
         <meta-data
@@ -19,6 +20,15 @@
         <meta-data
             android:name="xposedscope"
             android:resource="@array/xposed_scope" />
+
+        <activity
+            android:name=".TestActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "io.github.duzhaokun123.yayamf"
-    compileSdk = 33
+    compileSdk = 34
 
     defaultConfig {
         applicationId = "io.github.duzhaokun123.yayamf"
         minSdk = 33
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
 
@@ -33,19 +33,23 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        languageVersion = "2.0"
+        jvmTarget = "17"
     }
 }
 
 dependencies {
-    implementation(libs.ezXHelper)
     compileOnly(libs.xposed.api)
 
     compileOnly("dev.rikka.hidden:stub:4.2.0")
     implementation("dev.rikka.hidden:compat:4.2.0")
     compileOnly(project(":android-stub"))
+
+    implementation("io.github.duzhaokun123:YAXH:main-SNAPSHOT")
+
+    implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
 }

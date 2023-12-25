@@ -1,3 +1,1 @@
-io.github.duzhaokun123.yayamf.xposed.HookSystemUI
-io.github.duzhaokun123.yayamf.xposed.HookLauncher
-io.github.duzhaokun123.yayamf.xposed.HookSystem
+io.github.duzhaokun123.yayamf.xposed.XposedInit

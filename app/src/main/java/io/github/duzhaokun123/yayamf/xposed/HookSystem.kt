@@ -1,33 +1,40 @@
 package io.github.duzhaokun123.yayamf.xposed
 
-import android.app.TaskInfo
-import com.github.kyuubiran.ezxhelper.init.EzXHelperInit
-import com.github.kyuubiran.ezxhelper.utils.Log
-import com.github.kyuubiran.ezxhelper.utils.findMethod
-import com.github.kyuubiran.ezxhelper.utils.getObjectAs
-import com.github.kyuubiran.ezxhelper.utils.hookAfter
-import com.github.kyuubiran.ezxhelper.utils.hookBefore
-import com.github.kyuubiran.ezxhelper.utils.loadClass
-import com.github.kyuubiran.ezxhelper.utils.paramCount
 import de.robv.android.xposed.IXposedHookLoadPackage
 import de.robv.android.xposed.callbacks.XC_LoadPackage
-import io.github.duzhaokun123.yayamf.BuildConfig
+import io.github.duzhaokun123.yaxh.init.YAXHContext
+import io.github.duzhaokun123.yaxh.init.YAXHInit
+import io.github.duzhaokun123.yaxh.utils.findMethod
+import io.github.duzhaokun123.yaxh.utils.hookAfter
+import io.github.duzhaokun123.yaxh.utils.loadClass
+import io.github.duzhaokun123.yaxh.utils.setObject
+import io.github.duzhaokun123.yayamf.utils.MultiClassLoader
 
-class HookSystem: IXposedHookLoadPackage {
-    companion object {
-        const val TAG = "YAYAMF"
-    }
+object HookSystem: IXposedHookLoadPackage {
+    const val TAG = "YAYAMF_HookSystem"
+
+    val hookServices = arrayOf(
+        WMHook,
+    )
+
     override fun handleLoadPackage(lpparam: XC_LoadPackage.LoadPackageParam) {
-        if (lpparam.packageName != "android") return
+        YAXHInit.handleLoadPackage(lpparam)
+        YAXHInit.setLogTag(TAG)
+        MultiClassLoader.addClassLoader(YAXHContext.javaClass.classLoader.parent)
+        MultiClassLoader.addClassLoader(lpparam.classLoader)
+        YAXHContext.javaClass.classLoader.setObject("parent", MultiClassLoader)
 
-        EzXHelperInit.initHandleLoadPackage(lpparam)
-        EzXHelperInit.setLogTag(HookSystemUI.TAG)
-        Log.ix("YAYAMF ${BuildConfig.VERSION_NAME}(${BuildConfig.VERSION_CODE}) HookSystem loaded")
-
-        loadClass("com.android.server.wm.WindowManagerService")
-            .findMethod { name == "addWindow" }
-            .hookBefore {
-                android.util.Log.d(TAG, "addWindow: ${it.args[2]}")
+        loadClass("android.os.ServiceManagerProxy")
+            .findMethod { name == "addService" }
+            .hookAfter {
+                val serviceName = it.args[0] as String
+                val serviceClassLoader = it.args[1].javaClass.classLoader
+                hookServices.forEach { hookService ->
+                    MultiClassLoader.addClassLoader(serviceClassLoader!!)
+                    if (serviceName == hookService.serviceName) {
+                        hookService.onServiceAdded(serviceClassLoader)
+                    }
+                }
             }
     }
 }
