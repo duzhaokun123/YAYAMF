@@ -1,15 +1,16 @@
 package io.github.duzhaokun123.yayamf.wm.shell.windowdeco
 
 import android.app.ActivityManager
+import android.app.IActivityTaskManager
 import android.content.Context
-import android.os.IBinder
+import android.os.Handler
+import android.os.Looper
+import android.os.ServiceManager
 import android.util.SparseArray
 import android.view.SurfaceControl
 import android.window.TaskOrganizer
 import com.android.wm.shell.common.DisplayController
 import com.android.wm.shell.common.SyncTransactionQueue
-import com.android.wm.shell.freeform.FreeformTaskTransitionHandler
-import com.android.wm.shell.freeform.FreeformTaskTransitionStarter
 import com.android.wm.shell.splitscreen.SplitScreenController
 import com.android.wm.shell.windowdecor.TaskOperations
 import com.android.wm.shell.windowdecor.WindowDecorViewModel
@@ -84,6 +85,14 @@ class YAYAMFWindowDecorViewModel(private val original: Any) {
     var taskOperations = TaskOperations::class.java
         .findConstructor { parameterCount == 3 }
         .newInstance(null, context, syncQueue) as TaskOperations
+    val atm: IActivityTaskManager = IActivityTaskManager.Stub.asInterface(
+        ServiceManager.getService("activity_task")
+    )
+    lateinit var handler: Handler
+
+    init {
+        atm.registerTaskStackListener(TaskStackListener(this))
+    }
 
     fun setFreeformTaskTransitionStarter(transitionStarter: Any /* FreeformTaskTransitionStarter or FreeformTaskTransitionHandler */) {
         taskOperations = TaskOperations::class.java

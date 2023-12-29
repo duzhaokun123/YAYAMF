@@ -37,7 +37,7 @@ object HookSystemUI : IXposedHookLoadPackage {
         }.onFailure {
             XLog.v("it should first time start SystemUI")
         }
-        if (systemUiThisStart - systemUiLastStart < 1000) {
+        if (systemUiThisStart - systemUiLastStart < 5000) {
             XLog.e("SystemUI restart too close, may YAYAMF caused SystemUI restart loop, abort hooking")
             return
         }

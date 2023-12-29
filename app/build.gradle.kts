@@ -15,12 +15,11 @@ android {
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildFeatures {
         buildConfig = true
+        viewBinding = true
     }
 
     buildTypes {
@@ -36,10 +35,13 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+
     kotlinOptions {
         languageVersion = "2.0"
         jvmTarget = "17"
     }
+
+    androidResources.additionalParameters("--allow-reserved-package-id", "--package-id", "0x64")
 }
 
 dependencies {
@@ -52,4 +54,7 @@ dependencies {
     implementation("io.github.duzhaokun123:YAXH:main-SNAPSHOT")
 
     implementation("org.lsposed.hiddenapibypass:hiddenapibypass:4.3")
+
+    implementation("com.google.android.material:material:1.11.0")
+    implementation("androidx.wear:wear:1.3.0") // FIXME: use other RoundedDrawable
 }
