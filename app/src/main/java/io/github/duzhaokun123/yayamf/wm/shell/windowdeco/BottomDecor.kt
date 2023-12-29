@@ -1,35 +1,23 @@
 package io.github.duzhaokun123.yayamf.wm.shell.windowdeco
 
 import android.annotation.SuppressLint
-import android.app.ActivityManager.RunningTaskInfo
+import android.app.ActivityManager
 import android.content.Context
-import android.content.pm.IPackageManager
-import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Rect
-import android.graphics.drawable.BitmapDrawable
-import android.os.ServiceManager
 import android.view.Display
-import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.SurfaceControl
 import android.view.SurfaceControlViewHost
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowlessWindowManager
-import androidx.core.graphics.ColorUtils
-import androidx.wear.widget.RoundedDrawable
 import com.android.wm.shell.common.DisplayController
-import com.google.android.material.color.MaterialColors
 import io.github.duzhaokun123.yaxh.utils.findConstructor
-import io.github.duzhaokun123.yaxh.utils.logger.ALog
-import io.github.duzhaokun123.yayamf.R
-import io.github.duzhaokun123.yayamf.databinding.TopDecorBinding
 
-@SuppressLint("ClickableViewAccessibility")
-class TopDecor(
+class BottomDecor(
     val context: Context,
-    val taskInfo: RunningTaskInfo,
+    val taskInfo: ActivityManager.RunningTaskInfo,
     val taskSurface: SurfaceControl,
     val displayController: DisplayController,
     val params: YAYAMFWindowParams,
@@ -38,13 +26,10 @@ class TopDecor(
 ) {
     val decorationContainerSurface: SurfaceControl
     val decorationViewHost: SurfaceControlViewHost
-    val viewBinding: TopDecorBinding
-    val ipm: IPackageManager = IPackageManager.Stub.asInterface(ServiceManager.getService("package"))
-    val pm = context.packageManager
     var inited = false
     init {
         decorationContainerSurface = SurfaceControl.Builder()
-            .setName("YAYAMF:TopDecor(${taskInfo.taskId})")
+            .setName("YAYAMF:BottomDecor(${taskInfo.taskId})")
             .setContainerLayer()
             .setParent(taskSurface)
             .build()
@@ -68,27 +53,25 @@ class TopDecor(
                     if (it.parameterCount == 3) {
                         it.newInstance(context, display, windowlessWindowManager)
                     } else {
-                        it.newInstance(context, display, windowlessWindowManager, "YAYAMF:TopDecor(${taskInfo.taskId})")
+                        it.newInstance(context, display, windowlessWindowManager, "YAYAMF:BottomDecor(${taskInfo.taskId})")
                     }
                 } as SurfaceControlViewHost
-        params.topDecorHeight = context.resources.getDimensionPixelSize(R.dimen.top_decor_height)
-        viewBinding = TopDecorBinding.inflate(LayoutInflater.from(context))
-        decorationViewHost.setView(viewBinding.root, params.width, params.topDecorHeight)
-        viewBinding.ibClose.setOnClickListener {
-            decorViewModel.taskOperations.closeTask(taskInfo.token)
+        val view = View(context).apply {
+            setBackgroundColor(Color.RED)
+                alpha = 0.5F
         }
-        val moveHandler = object : View.OnTouchListener {
-            var startX = 0
-            var startY = 0
+        val resizeHandler = object : View.OnTouchListener {
+            var startWidth = 0
+            var startHeight = 0
             var downX = 0F
             var downY = 0F
 
             @SuppressLint("ClickableViewAccessibility")
             override fun onTouch(v: View, event: MotionEvent): Boolean {
-                when (event.action) {
+                when(event.action) {
                     MotionEvent.ACTION_DOWN -> {
-                        startX = params.x
-                        startY = params.y
+                        startWidth = params.width
+                        startHeight = params.taskHeight
                         downX = event.rawX
                         downY = event.rawY
                         params.moving = true
@@ -97,14 +80,14 @@ class TopDecor(
                     MotionEvent.ACTION_MOVE -> {
                         val offsetX = (event.rawX - downX).toInt()
                         val offsetY = (event.rawY - downY).toInt()
-                        params.x = (startX + offsetX)
-                        params.y = (startY + offsetY)
+                        params.width = (startWidth + offsetX)
+                        params.taskHeight = (startHeight + offsetY)
                         decoration.updateParams()
                     }
 
                     MotionEvent.ACTION_UP -> {
-                        params.x = (startX + (event.rawX - downX)).toInt()
-                        params.y = (startY + (event.rawY - downY)).toInt()
+                        params.width = (startWidth + (event.rawX - downX)).toInt()
+                        params.taskHeight = (startHeight + (event.rawY - downY)).toInt()
                         params.moving = false
                         decoration.updateParams()
                     }
@@ -112,7 +95,8 @@ class TopDecor(
                 return true
             }
         }
-        viewBinding.root.setOnTouchListener(moveHandler)
+        view.setOnTouchListener(resizeHandler)
+        decorationViewHost.setView(view, 50, 50)
     }
 
     fun init(t: SurfaceControl.Transaction) {
@@ -124,29 +108,7 @@ class TopDecor(
     }
 
     fun updateParams(t: SurfaceControl.Transaction) {
-        t.setCrop(decorationContainerSurface, Rect(0, 0, params.width, params.topDecorHeight))
-        t.setPosition(decorationContainerSurface, 0F, 0F)
-    }
-
-    fun relayout(taskInfo: RunningTaskInfo) {
-        decorationViewHost.relayout(params.width, params.topDecorHeight)
-        val activityInfo = taskInfo.topActivityInfo ?: return
-        viewBinding.tvLabel.text = taskInfo.taskDescription.label ?: activityInfo.loadLabel(pm)
-        val statusBarColor = taskInfo.taskDescription.statusBarColor
-        val backgroundColor = taskInfo.taskDescription.backgroundColor
-        val isLightColor = MaterialColors.isColorLight(ColorUtils.compositeColors(statusBarColor, backgroundColor))
-        val onStatusBarColor = if (isLightColor) Color.BLACK else Color.WHITE // FIXME: use themed color
-        viewBinding.tvLabel.setTextColor(onStatusBarColor)
-        viewBinding.rlRoot.setBackgroundColor(statusBarColor)
-        viewBinding.ibClose.imageTintList = ColorStateList.valueOf(onStatusBarColor)
-//        val activityInfo = ipm.getActivityInfo(taskInfo.topActivity, 0, taskInfo.userId)
-        val icon = runCatching { taskInfo.taskDescription.icon }.getOrNull()?.let { BitmapDrawable(it) } ?: runCatching { activityInfo.loadIcon(pm) }.getOrNull()
-        icon?.let {
-            viewBinding.ivIcon.setImageDrawable(RoundedDrawable().apply {
-                drawable = it
-                isClipEnabled = true
-                radius = 100
-            })
-        }
+        t.setCrop(decorationContainerSurface, Rect(0, 0, 50, 50))
+        t.setPosition(decorationContainerSurface, params.width - 50F, params.height - 50F)
     }
 }

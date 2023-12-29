@@ -9,5 +9,5 @@ data class YAYAMFWindowParams(
     var moving: Boolean = false,
 ) {
     val height: Int
-        get() = taskHeight + topDecorHeight
+        get() = taskHeight
 }
