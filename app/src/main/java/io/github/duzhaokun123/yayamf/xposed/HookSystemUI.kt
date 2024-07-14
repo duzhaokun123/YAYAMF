@@ -37,7 +37,10 @@ object HookSystemUI : IXposedHookLoadPackage {
         }.onFailure {
             XLog.v("it should first time start SystemUI")
         }
-        if (systemUiThisStart - systemUiLastStart < 5000) {
+        val ignoreCrashCloseFile = File("/data/user_de/0/com.android.systemui/ignore_crash_close")
+        if (ignoreCrashCloseFile.exists()) {
+            XLog.i("ignore_crash_close exists, keep hooking SystemUI")
+        } else if (systemUiThisStart - systemUiLastStart < 5000) {
             XLog.e("SystemUI restart too close, may YAYAMF caused SystemUI restart loop, abort hooking")
             return
         }

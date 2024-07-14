@@ -16,4 +16,10 @@
         android:layout_height="wrap_content"
         android:text="finish" />
 
+    <Switch
+        android:text="igonre systemui crash too close"
+        android:id="@+id/switch1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
 </LinearLayout>

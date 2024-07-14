@@ -57,4 +57,9 @@ dependencies {
 
     implementation("com.google.android.material:material:1.11.0")
     implementation("androidx.wear:wear:1.3.0") // FIXME: use other RoundedDrawable
+
+    val libsuVersion = "6.0.0"
+    // The core module that provides APIs to a shell
+    implementation("com.github.topjohnwu.libsu:core:${libsuVersion}")
+
 }
