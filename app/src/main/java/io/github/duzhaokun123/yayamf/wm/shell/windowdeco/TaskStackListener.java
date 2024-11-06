@@ -99,6 +99,11 @@ public class TaskStackListener extends ITaskStackListener.Stub {
     }
 
     @Override
+    public void onTaskSnapshotInvalidated(int taskId) throws RemoteException {
+
+    }
+
+    @Override
     public void onBackPressedOnTaskRoot(ActivityManager.RunningTaskInfo taskInfo) throws RemoteException {
 
     }
@@ -135,7 +140,7 @@ public class TaskStackListener extends ITaskStackListener.Stub {
 
     @Override
     public void onTaskMovedToBack(ActivityManager.RunningTaskInfo taskInfo) throws RemoteException {
-
+        ALog.INSTANCE.d("onTaskMovedToBack" + taskInfo.taskDescription.toString(), null);
     }
 
     @Override

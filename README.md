@@ -6,4 +6,4 @@
 
 构建需要
 - [YAXH](https://github.com/duzhaokun123/YAXH) jitpack 的应该就行
-- 修改了的的 android.jar https://github.com/Reginer/aosp-android-jar/tree/main/android-34
+- 修改了的的 android.jar https://github.com/Reginer/aosp-android-jar/tree/main/android-35

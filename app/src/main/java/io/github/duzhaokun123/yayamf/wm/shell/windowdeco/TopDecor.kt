@@ -2,13 +2,16 @@ package io.github.duzhaokun123.yayamf.wm.shell.windowdeco
 
 import android.annotation.SuppressLint
 import android.app.ActivityManager.RunningTaskInfo
+import android.app.IActivityTaskManager
 import android.content.Context
 import android.content.pm.IPackageManager
 import android.content.res.ColorStateList
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Rect
 import android.graphics.drawable.BitmapDrawable
 import android.os.ServiceManager
+import android.os.Trace
 import android.view.Display
 import android.view.LayoutInflater
 import android.view.MotionEvent
@@ -17,11 +20,14 @@ import android.view.SurfaceControlViewHost
 import android.view.View
 import android.view.WindowManager
 import android.view.WindowlessWindowManager
+import android.window.InputTransferToken
+import android.window.WindowContainerTransaction
 import androidx.core.graphics.ColorUtils
 import androidx.wear.widget.RoundedDrawable
 import com.android.wm.shell.common.DisplayController
 import com.google.android.material.color.MaterialColors
 import io.github.duzhaokun123.yaxh.utils.findConstructor
+import io.github.duzhaokun123.yaxh.utils.invokeMethodAuto
 import io.github.duzhaokun123.yaxh.utils.logger.ALog
 import io.github.duzhaokun123.yayamf.R
 import io.github.duzhaokun123.yayamf.databinding.TopDecorBinding
@@ -40,6 +46,7 @@ class TopDecor(
     val decorationViewHost: SurfaceControlViewHost
     val viewBinding: TopDecorBinding
     val ipm: IPackageManager = IPackageManager.Stub.asInterface(ServiceManager.getService("package"))
+    val itm = IActivityTaskManager.Stub.asInterface(ServiceManager.getService("activity_task"))
     val pm = context.packageManager
     var inited = false
     init {
@@ -62,8 +69,10 @@ class TopDecor(
                     )
                 }.let {
                     val display = displayController.getDisplay(taskInfo.displayId)
-                    val windowlessWindowManager = WindowlessWindowManager(
-                        taskInfo.configuration, decorationContainerSurface, null
+                    val windowlessWindowManager = WindowlessWindowManager::class.java.findConstructor {
+                        true
+                    }.newInstance(
+                        taskInfo.configuration, decorationContainerSurface, null as InputTransferToken?,
                     )
                     if (it.parameterCount == 3) {
                         it.newInstance(context, display, windowlessWindowManager)
@@ -75,7 +84,7 @@ class TopDecor(
         viewBinding = TopDecorBinding.inflate(LayoutInflater.from(context))
         decorationViewHost.setView(viewBinding.root, params.width, params.topDecorHeight)
         viewBinding.ibClose.setOnClickListener {
-            decorViewModel.taskOperations.closeTask(taskInfo.token)
+            itm.removeTask(taskInfo.taskId)
         }
         val moveHandler = object : View.OnTouchListener {
             var startX = 0
@@ -131,16 +140,16 @@ class TopDecor(
     fun relayout(taskInfo: RunningTaskInfo) {
         decorationViewHost.relayout(params.width, params.topDecorHeight)
         val activityInfo = taskInfo.topActivityInfo ?: return
-        viewBinding.tvLabel.text = taskInfo.taskDescription.label ?: activityInfo.loadLabel(pm)
-        val statusBarColor = taskInfo.taskDescription.statusBarColor
-        val backgroundColor = taskInfo.taskDescription.backgroundColor
+        viewBinding.tvLabel.text = "${taskInfo.taskDescription?.label ?: activityInfo.loadLabel(pm)} (${taskInfo.taskId})"
+        val statusBarColor = taskInfo.taskDescription?.statusBarColor ?: 0xFF000000.toInt()
+        val backgroundColor = taskInfo.taskDescription?.backgroundColor ?: 0xFF000000.toInt()
         val isLightColor = MaterialColors.isColorLight(ColorUtils.compositeColors(statusBarColor, backgroundColor))
         val onStatusBarColor = if (isLightColor) Color.BLACK else Color.WHITE // FIXME: use themed color
         viewBinding.tvLabel.setTextColor(onStatusBarColor)
         viewBinding.rlRoot.setBackgroundColor(statusBarColor)
         viewBinding.ibClose.imageTintList = ColorStateList.valueOf(onStatusBarColor)
 //        val activityInfo = ipm.getActivityInfo(taskInfo.topActivity, 0, taskInfo.userId)
-        val icon = runCatching { taskInfo.taskDescription.icon }.getOrNull()?.let { BitmapDrawable(it) } ?: runCatching { activityInfo.loadIcon(pm) }.getOrNull()
+        val icon = runCatching { taskInfo.taskDescription?.icon }.getOrNull()?.let { BitmapDrawable(it) } ?: runCatching { activityInfo.loadIcon(pm) }.getOrNull()
         icon?.let {
             viewBinding.ivIcon.setImageDrawable(RoundedDrawable().apply {
                 drawable = it
@@ -148,5 +157,14 @@ class TopDecor(
                 radius = 100
             })
         }
+    }
+
+    fun close() {
+
+            Trace.beginSection("WindowDecoration#close");
+        val wct = WindowContainerTransaction();
+        decorViewModel.taskOrganizer.applyTransaction(wct);
+        taskSurface.release();
+        Trace.endSection();
     }
 }

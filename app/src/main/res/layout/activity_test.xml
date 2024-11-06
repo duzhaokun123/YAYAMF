@@ -15,6 +15,11 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="finish" />
+    <Button
+        android:id="@+id/btn3"
+        android:text="restart system ui"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
 
     <Switch
         android:text="igonre systemui crash too close"

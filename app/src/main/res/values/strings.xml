@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="xposeddescription">Yet Another YAMF</string>
+    <string name="unknown_error">unknown error</string>
+    <string name="details">deatils</string>
 </resources>

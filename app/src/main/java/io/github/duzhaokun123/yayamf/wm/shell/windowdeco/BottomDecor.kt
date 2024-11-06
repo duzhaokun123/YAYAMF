@@ -4,62 +4,37 @@ import android.annotation.SuppressLint
 import android.app.ActivityManager
 import android.content.Context
 import android.graphics.Color
+import android.graphics.PointF
 import android.graphics.Rect
-import android.view.Display
+import android.view.LayoutInflater
 import android.view.MotionEvent
 import android.view.SurfaceControl
-import android.view.SurfaceControlViewHost
 import android.view.View
-import android.view.WindowManager
-import android.view.WindowlessWindowManager
 import com.android.wm.shell.common.DisplayController
-import io.github.duzhaokun123.yaxh.utils.findConstructor
+import io.github.duzhaokun123.yayamf.databinding.BottomDecorBinding
+import io.github.duzhaokun123.yayamf.R
 
 class BottomDecor(
-    val context: Context,
-    val taskInfo: ActivityManager.RunningTaskInfo,
-    val taskSurface: SurfaceControl,
-    val displayController: DisplayController,
-    val params: YAYAMFWindowParams,
-    val decorViewModel: YAYAMFWindowDecorViewModel,
-    val decoration: YAYAMFWindowDecoration
+    context: Context,
+    taskInfo: ActivityManager.RunningTaskInfo,
+    taskSurface: SurfaceControl,
+    displayController: DisplayController,
+    params: YAYAMFWindowParams,
+    decorViewModel: YAYAMFWindowDecorViewModel,
+    decoration: YAYAMFWindowDecoration
+) : BaseDecor(
+    context, taskInfo, taskSurface, displayController, params, decorViewModel, decoration
 ) {
-    val decorationContainerSurface: SurfaceControl
-    val decorationViewHost: SurfaceControlViewHost
-    var inited = false
+    override val rect: Rect
+        get() = Rect(0, 0, params.width, context.resources.getDimensionPixelSize(R.dimen.bottom_decor_height))
+    override val position: PointF
+        get() = PointF(0F, params.height - context.resources.getDimensionPixelSize(R.dimen.bottom_decor_height).toFloat())
+    override val contentView: View
+        get() = binding.root
+
+    val binding: BottomDecorBinding = BottomDecorBinding.inflate(LayoutInflater.from(context))
+
     init {
-        decorationContainerSurface = SurfaceControl.Builder()
-            .setName("YAYAMF:BottomDecor(${taskInfo.taskId})")
-            .setContainerLayer()
-            .setParent(taskSurface)
-            .build()
-        decorationViewHost = SurfaceControlViewHost::class.java
-                .findConstructor {
-                    parameterTypes contentEquals arrayOf(
-                        Context::class.java,
-                        Display::class.java,
-                        WindowlessWindowManager::class.java,
-                        String::class.java
-                    ) || parameterTypes contentEquals arrayOf(
-                        Context::class.java,
-                        Display::class.java,
-                        WindowlessWindowManager::class.java
-                    )
-                }.let {
-                    val display = displayController.getDisplay(taskInfo.displayId)
-                    val windowlessWindowManager = WindowlessWindowManager(
-                        taskInfo.configuration, decorationContainerSurface, null
-                    )
-                    if (it.parameterCount == 3) {
-                        it.newInstance(context, display, windowlessWindowManager)
-                    } else {
-                        it.newInstance(context, display, windowlessWindowManager, "YAYAMF:BottomDecor(${taskInfo.taskId})")
-                    }
-                } as SurfaceControlViewHost
-        val view = View(context).apply {
-            setBackgroundColor(Color.RED)
-                alpha = 0.5F
-        }
         val resizeHandler = object : View.OnTouchListener {
             var startWidth = 0
             var startHeight = 0
@@ -95,20 +70,6 @@ class BottomDecor(
                 return true
             }
         }
-        view.setOnTouchListener(resizeHandler)
-        decorationViewHost.setView(view, 50, 50)
-    }
-
-    fun init(t: SurfaceControl.Transaction) {
-        if (inited) return
-        inited = true
-        t.show(decorationContainerSurface)
-        t.setTrustedOverlay(decorationContainerSurface, true)
-        t.setLayer(decorationContainerSurface, WindowManager.LayoutParams.FIRST_SYSTEM_WINDOW) // higher than task
-    }
-
-    fun updateParams(t: SurfaceControl.Transaction) {
-        t.setCrop(decorationContainerSurface, Rect(0, 0, 50, 50))
-        t.setPosition(decorationContainerSurface, params.width - 50F, params.height - 50F)
+        binding.tvResize.setOnTouchListener(resizeHandler)
     }
 }

@@ -7,12 +7,12 @@ plugins {
 
 android {
     namespace = "io.github.duzhaokun123.yayamf"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "io.github.duzhaokun123.yayamf"
-        minSdk = 33
-        targetSdk = 34
+        minSdk = 35
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
     }
@@ -61,5 +61,8 @@ dependencies {
     val libsuVersion = "6.0.0"
     // The core module that provides APIs to a shell
     implementation("com.github.topjohnwu.libsu:core:${libsuVersion}")
+
+    implementation("com.github.matsudamper:ViewBindingUtil:0.1")
+    implementation("androidx.activity:activity-ktx:1.9.2")
 
 }

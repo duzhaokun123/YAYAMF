@@ -1,7 +1,11 @@
 package io.github.duzhaokun123.yayamf
 
+import android.annotation.SuppressLint
 import com.topjohnwu.superuser.Shell
 import org.lsposed.hiddenapibypass.HiddenApiBypass
+
+@SuppressLint("StaticFieldLeak")
+lateinit var app: Application
 
 class Application: android.app.Application() {
     init {
@@ -12,6 +16,7 @@ class Application: android.app.Application() {
                 .setFlags(Shell.FLAG_MOUNT_MASTER)
                 .setTimeout(10)
         )
+        app = this
     }
     override fun onCreate() {
         super.onCreate()

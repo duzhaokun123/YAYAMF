@@ -6,7 +6,7 @@
         android:name=".Application"
         android:label="YAYAMF"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.DeviceDefault.DayNight"
+        android:theme="@style/Theme.YAYAMF"
         tools:ignore="MissingApplicationIcon">
         <meta-data
             android:name="xposedmodule"

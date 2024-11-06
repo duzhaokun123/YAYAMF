@@ -1,21 +1,15 @@
 package io.github.duzhaokun123.yayamf
 
-import android.app.Activity
-import android.app.ActivityManager
 import android.app.ActivityOptions
-import android.os.Bundle
-import android.widget.Button
-import android.widget.Switch
 import com.topjohnwu.superuser.Shell
+import io.github.duzhaokun123.yayamf.bases.BaseActivity
+import io.github.duzhaokun123.yayamf.databinding.ActivityTestBinding
+import io.github.duzhaokun123.yayamf.utils.TipUtil
 import io.github.duzhaokun123.yayamf.utils.WINDOWING_MODE_YAYAMF
-import java.io.File
-import kotlin.random.Random
 
-class TestActivity: Activity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_test)
-        findViewById<Button>(R.id.btn1).setOnClickListener {
+class TestActivity: BaseActivity<ActivityTestBinding>(ActivityTestBinding::class.java) {
+    override fun initEvents() {
+        baseBinding.btn1.setOnClickListener {
             val options = ActivityOptions.makeBasic()
             options.launchWindowingMode = WINDOWING_MODE_YAYAMF
             startActivity(intent, options.toBundle())
@@ -23,10 +17,10 @@ class TestActivity: Activity() {
 //                .setLabel(Random.nextInt().toString())
 //                .build())
         }
-        findViewById<Button>(R.id.btn2).setOnClickListener {
+        baseBinding.btn2.setOnClickListener {
             finish()
         }
-        findViewById<Switch>(R.id.switch1).apply {
+        baseBinding.switch1.apply {
             isChecked = Shell.cmd("[ -f /data/user_de/0/com.android.systemui/ignore_crash_close ]").exec().isSuccess
             setOnCheckedChangeListener { _, isChecked ->
                 if (isChecked) {
@@ -40,5 +34,14 @@ class TestActivity: Activity() {
                 }
             }
         }
+        baseBinding.btn3.setOnClickListener {
+            // restart SystemUI
+            Shell.cmd("pkill -f com.android.systemui").exec()
+        }
+    }
+
+    override fun onBackPressed() {
+        super.onBackPressed()
+        TipUtil.showTip(this, "onBackPressed")
     }
 }

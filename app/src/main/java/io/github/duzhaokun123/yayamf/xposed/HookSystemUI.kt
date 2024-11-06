@@ -15,6 +15,7 @@ import io.github.duzhaokun123.yaxh.utils.logger.XLog
 import io.github.duzhaokun123.yaxh.utils.setObject
 import io.github.duzhaokun123.yayamf.utils.MultiClassLoader
 import io.github.duzhaokun123.yayamf.wm.shell.windowdeco.YAYAMFWindowDecorViewModel
+import org.lsposed.hiddenapibypass.HiddenApiBypass
 import java.io.File
 
 object HookSystemUI : IXposedHookLoadPackage {
@@ -46,23 +47,15 @@ object HookSystemUI : IXposedHookLoadPackage {
         }
 
         XLog.i("hooking SystemUI")
+        HiddenApiBypass.addHiddenApiExemptions("")
         MultiClassLoader.addClassLoader(YAXHContext.javaClass.classLoader.parent)
         MultiClassLoader.addClassLoader(lpparam.classLoader)
         YAXHContext.javaClass.classLoader.setObject("parent", MultiClassLoader)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            loadClass("com.android.wm.shell.dagger.WMShellModule_ProvideWindowDecorViewModelFactory")
-                .findMethod { name == "get" || name == "provideWindowDecorViewModel" }
-                .hookAfter {
-                    it.result = YAYAMFWindowDecorViewModel(it.result).toProxy()
-                    ALog.d("provideWindowDecorViewModel called")
-                }
-
-        } else {
-            loadClass("com.android.wm.shell.freeform.FreeformTaskListener")
-                .hookAllConstructorBefore {
-                    it.args[3] = YAYAMFWindowDecorViewModel(it.args[3]).toProxy()
-                    ALog.d("FreeformTaskListener constructor called")
-                }
-        }
+        loadClass("com.android.wm.shell.dagger.WMShellModule_ProvideWindowDecorViewModelFactory")
+            .findMethod { name == "get" || name == "provideWindowDecorViewModel" }
+            .hookAfter {
+                it.result = YAYAMFWindowDecorViewModel(it.result).toProxy()
+                ALog.d("provideWindowDecorViewModel called")
+            }
     }
 }

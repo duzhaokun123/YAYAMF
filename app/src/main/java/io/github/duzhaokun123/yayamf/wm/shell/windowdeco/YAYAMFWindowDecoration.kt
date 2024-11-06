@@ -16,6 +16,7 @@ import android.window.WindowContainerTransaction
 import com.android.wm.shell.common.DisplayController
 import com.android.wm.shell.common.SyncTransactionQueue
 import io.github.duzhaokun123.yaxh.utils.addModuleAssetPath
+import io.github.duzhaokun123.yayamf.utils.runMain
 
 class YAYAMFWindowDecoration(
     val context: Context,
@@ -61,7 +62,8 @@ class YAYAMFWindowDecoration(
         startT: SurfaceControl.Transaction,
         finishT: SurfaceControl.Transaction,
     ) {
-        if (handler == null) handler = Handler(Looper.myLooper())
+        if (handler == null) handler = Handler::class.java.getDeclaredConstructor(Looper::class.java).newInstance(
+            Looper.myLooper())
         if (taskInfo.isVisible().not()) return
 
         taskInfo.configuration.windowConfiguration.bounds.apply {
@@ -71,12 +73,14 @@ class YAYAMFWindowDecoration(
             params.y = top
         }
 
-        topDecor.init(finishT)
-        bottomDecor.init(finishT)
-        topDecor.updateParams(startT)
-        topDecor.relayout(taskInfo)
-        bottomDecor.updateParams(startT)
-        updateParams(startT)
+        handler!!.post {
+            topDecor.init(finishT)
+            bottomDecor.init(finishT)
+            topDecor.updateParams(startT)
+            topDecor.relayout(taskInfo)
+            bottomDecor.updateParams(startT)
+            updateParams(startT)
+        }
     }
 
     fun postRelayout(taskInfo: RunningTaskInfo) {
@@ -98,8 +102,8 @@ class YAYAMFWindowDecoration(
         taskBounds.offsetTo(params.x, params.y)
         wct.setBounds(token, taskBounds)
         val captionRect = Rect(0, 0, params.width, params.topDecorHeight)
-        wct.addInsetsSource(token, owner, 0, WindowInsets.Type.captionBar(), captionRect)
-        wct.addInsetsSource(token, owner, 0, WindowInsets.Type.statusBars(), captionRect)
+        wct.addInsetsSource(token, owner, 0, WindowInsets.Type.captionBar(), captionRect, emptyArray<Rect>())
+        wct.addInsetsSource(token, owner, 0, WindowInsets.Type.statusBars(), captionRect, emptyArray<Rect>())
         taskOrganizer.applyTransaction(wct)
     }
 

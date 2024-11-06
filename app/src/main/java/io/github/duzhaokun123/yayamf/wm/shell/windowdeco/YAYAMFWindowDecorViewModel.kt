@@ -158,7 +158,7 @@ class YAYAMFWindowDecorViewModel(private val original: Any) {
     private fun shouldShowWindowDecor(taskInfo: ActivityManager.RunningTaskInfo): Boolean {
         return taskInfo.windowingMode == 5 /* WINDOWING_MODE_FREEFORM */
                 || taskInfo.activityType == 1 /* ACTIVITY_TYPE_STANDARD */
-                && taskInfo.configuration.windowConfiguration.invokeMethodAutoAs<Int>("getDisplayWindowingMode") == 5 /* WINDOWING_MODE_FREEFORM */
+                && taskInfo.configuration.windowConfiguration.invokeMethodAutoAs<Int>("getWindowingMode") == 5 /* WINDOWING_MODE_FREEFORM */
     }
 
     private fun createWindowDecoration(

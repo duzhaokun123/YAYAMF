@@ -5,10 +5,10 @@ plugins {
 
 android {
     namespace = "io.github.duzhaokun123.android_stub"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
-        minSdk = 34
+        minSdk = 35
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
